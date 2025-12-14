@@ -284,7 +284,6 @@ export function PartnerProvider({ children }) {
             updatePartner,
             updateAllocation,
             toggleWorkDay,
-            toggleWorkDay,
             toggleVacation,
             toggleTraining,
         }}>
