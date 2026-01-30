@@ -28,6 +28,7 @@ function createDefaultData() {
             vacations: [],
             trainingsGiven: [],
             trainingsReceived: [],
+            afvac: [],
         })),
         settings: {
             countHolidaysAsLeave: true,
@@ -115,7 +116,8 @@ export function PartnerProvider({ children }) {
             allocations: data.allocations || p.allocations || { ...DEFAULT_ALLOCATION },
             vacations: data.vacations || [],
             trainingsGiven: data.trainingsGiven || [],
-            trainingsReceived: data.trainingsReceived || []
+            trainingsReceived: data.trainingsReceived || [],
+            afvac: data.afvac || []
         };
     }, []);
 
@@ -188,12 +190,16 @@ export function PartnerProvider({ children }) {
             newVacations.push(dateStr);
             newGiven = newGiven.filter(d => d !== dateStr);
             newReceived = newReceived.filter(d => d !== dateStr);
+            updateYearSpecific(id, year, {
+                afvac: (current.afvac || []).filter(d => d !== dateStr)
+            });
         }
 
         updateYearSpecific(id, year, {
             vacations: newVacations,
             trainingsGiven: newGiven,
-            trainingsReceived: newReceived
+            trainingsReceived: newReceived,
+            afvac: (current.afvac || []).filter(d => d !== dateStr)
         });
     };
 
@@ -225,7 +231,32 @@ export function PartnerProvider({ children }) {
         updateYearSpecific(id, year, {
             vacations: newVacations,
             trainingsGiven: newGiven,
-            trainingsReceived: newReceived
+            trainingsReceived: newReceived,
+            afvac: (current.afvac || []).filter(d => d !== dateStr)
+        });
+    };
+
+    const toggleAFVAC = (id, dateStr) => {
+        const partner = database.partners.find(p => p.id === id);
+        if (!partner) return;
+        const current = getYearData(partner, year);
+
+        let newAFVAC = [...(current.afvac || [])];
+        let newVacations = current.vacations.filter(d => d !== dateStr);
+        let newGiven = current.trainingsGiven.filter(d => d !== dateStr);
+        let newReceived = current.trainingsReceived.filter(d => d !== dateStr);
+
+        if (newAFVAC.includes(dateStr)) {
+            newAFVAC = newAFVAC.filter(d => d !== dateStr);
+        } else {
+            newAFVAC.push(dateStr);
+        }
+
+        updateYearSpecific(id, year, {
+            vacations: newVacations,
+            trainingsGiven: newGiven,
+            trainingsReceived: newReceived,
+            afvac: newAFVAC
         });
     };
 
@@ -260,6 +291,7 @@ export function PartnerProvider({ children }) {
             toggleWorkDay,
             toggleVacation,
             toggleTraining,
+            toggleAFVAC,
             isSaving
         }}>
             {children}

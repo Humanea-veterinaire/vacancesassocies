@@ -3,11 +3,11 @@ import { eachMonthOfInterval, endOfMonth, endOfYear, eachDayOfInterval, format, 
 import { fr } from 'date-fns/locale';
 import { usePartnerContext } from '../context/PartnerContext';
 import { isWorkedHoliday } from '../utils/holidays';
-import { GraduationCap, Umbrella, BookOpen } from 'lucide-react';
+import { GraduationCap, Umbrella, BookOpen, Activity } from 'lucide-react';
 
 export default function CalendarView({ partner }) {
-    const { year, holidays, toggleVacation, toggleTraining } = usePartnerContext();
-    const [mode, setMode] = useState('vacation'); // 'vacation' | 'given' | 'received'
+    const { year, holidays, toggleVacation, toggleTraining, toggleAFVAC } = usePartnerContext();
+    const [mode, setMode] = useState('vacation'); // 'vacation' | 'given' | 'received' | 'afvac'
 
     const yearStart = startOfYear(new Date(year, 0, 1));
     const yearEnd = endOfYear(yearStart);
@@ -43,6 +43,13 @@ export default function CalendarView({ partner }) {
                         <BookOpen className="w-4 h-4" />
                         Formation Reçue
                     </button>
+                    <button
+                        onClick={() => setMode('afvac')}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${mode === 'afvac' ? 'bg-white text-[#FBC619] shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}
+                    >
+                        <Activity className="w-4 h-4" />
+                        AFVAC
+                    </button>
                 </div>
             </div>
 
@@ -57,6 +64,8 @@ export default function CalendarView({ partner }) {
                         onToggle={(id, date) => {
                             if (mode === 'vacation') {
                                 toggleVacation(id, date);
+                            } else if (mode === 'afvac') {
+                                toggleAFVAC(id, date);
                             } else {
                                 // Check limit before adding
                                 const isGiven = mode === 'given';
@@ -87,6 +96,7 @@ export default function CalendarView({ partner }) {
                 <div className="flex items-center gap-2"><div className="w-3 h-3 rounded bg-primary"></div> Congé</div>
                 <div className="flex items-center gap-2"><div className="w-3 h-3 rounded bg-purple-500"></div> Formation Donnée</div>
                 <div className="flex items-center gap-2"><div className="w-3 h-3 rounded bg-orange-500"></div> Formation Reçue</div>
+                <div className="flex items-center gap-2"><div className="w-3 h-3 rounded bg-[#FBC619]"></div> AFVAC</div>
                 <div className="flex items-center gap-2"><div className="w-3 h-3 rounded bg-gray-100 border border-gray-200"></div> Travaillable</div>
             </div>
         </div>
@@ -133,6 +143,7 @@ function MonthGrid({ monthStart, partner, holidays, onToggle, mode }) {
                     const isVacation = partner.vacations.includes(dateStr);
                     const isGiven = partner.trainingsGiven && partner.trainingsGiven.includes(dateStr);
                     const isReceived = partner.trainingsReceived && partner.trainingsReceived.includes(dateStr);
+                    const isAFVAC = partner.afvac && partner.afvac.includes(dateStr);
 
                     const holidayName = holidays[dateStr];
                     const isPentecote = isWorkedHoliday(holidayName);
@@ -158,6 +169,8 @@ function MonthGrid({ monthStart, partner, holidays, onToggle, mode }) {
                         stateClasses = "bg-purple-500 text-white shadow-md shadow-purple-500/25 border-purple-500 font-bold scale-110 z-10";
                     } else if (isReceived) {
                         stateClasses = "bg-orange-500 text-white shadow-md shadow-orange-500/25 border-orange-500 font-bold scale-110 z-10";
+                    } else if (isAFVAC) {
+                        stateClasses = "bg-[#FBC619] text-white shadow-md shadow-[#FBC619]/25 border-[#FBC619] font-bold scale-110 z-10";
                     } else if (isPentecote) {
                         stateClasses += " ring-2 ring-secondary/20 text-secondary font-semibold";
                     }
@@ -179,8 +192,9 @@ function MonthGrid({ monthStart, partner, holidays, onToggle, mode }) {
                             className={`
                 h-9 w-9 rounded-lg flex items-center justify-center text-xs transition-all duration-200 relative group/day
                 ${stateClasses}
-                ${!isDisabled && mode === 'given' && !isGiven && !isVacation && !isReceived ? 'hover:border-purple-300 hover:text-purple-600' : ''}
-                ${!isDisabled && mode === 'received' && !isReceived && !isVacation && !isGiven ? 'hover:border-orange-300 hover:text-orange-600' : ''}
+                ${!isDisabled && mode === 'given' && !isGiven && !isVacation && !isReceived && !isAFVAC ? 'hover:border-purple-300 hover:text-purple-600' : ''}
+                ${!isDisabled && mode === 'received' && !isReceived && !isVacation && !isGiven && !isAFVAC ? 'hover:border-orange-300 hover:text-orange-600' : ''}
+                ${!isDisabled && mode === 'afvac' && !isAFVAC && !isVacation && !isGiven && !isReceived ? 'hover:border-[#FBC619] hover:text-[#FBC619]' : ''}
               `}
                             title={holidayName || ''}
                         >
